@@ -22,7 +22,9 @@
 
 (defvar pelpa-mode-map
   (let ((map (make-keymap)))
-    (define-key map "r" 'pm/ajax-build-status)))
+    (define-key map "\C-i" 'pm/ajax-build-status)
+    map)
+  "major key map for pelpa-mode")
 
 (defcustom pm/build-status-url "http://pelpa.popkit.org/elpa/build/ajaxBuildStatus.json"
   "build status url for ajax"
@@ -37,7 +39,7 @@
 (defun pm/ajax-build-status (arg)
   "ajax pelpa building status"
   (interactive "P")
-  (let* ((pelpa-build-status-url "http://pelpa.popkit.org/elpa/build/ajaxBuildStatus.json")
+  (let* ((pelpa-build-status-url pm/build-status-url)
          (pelpa-buffer-name "*pelpa*")
          (pelpa-buffer (get-buffer-create pelpa-buffer-name))
          (buffer (url-retrieve-synchronously pelpa-build-status-url))
@@ -55,8 +57,7 @@
         (setq-default major-mode 'pelpa-mode)  ;; 设置local mojor-mode为'text-mode
         (set-buffer-major-mode pelpa-buffer)
         (erase-buffer)     ;; 先清空原有的内容
-        (insert headers)
-        (switch-to-buffer pelpa-buffer-name))
-      )))
+        (insert headers)))
+    (switch-to-buffer pelpa-buffer-name)))
 
 (provide 'pelpa-mode)
