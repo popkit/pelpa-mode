@@ -69,7 +69,7 @@
          (pelpa-buffer-name "*pelpa*")
          (pelpa-buffer (get-buffer-create pelpa-buffer-name))
          (buffer (url-retrieve-synchronously pelpa-build-status-url))
-         (headers nil)
+         (http-content nil)
          (json-data nil))
     (if (not buffer)
         (error "请求%s失败，请重试!" pelpa-build-status-url))
@@ -77,14 +77,14 @@
       (unless (= 200 (url-http-parse-response))
         (error "Http error %s fetching %s" url-http-response-status pelpa-build-status-url))
       (message "temp buffer name=%s" (buffer-name))
-      (setq headers (decode-coding-string (buffer-string) 'utf-8))
-      (setq json-data (pm/read-http-data-as-json headers))
+      (setq http-content (decode-coding-string (buffer-string) 'utf-8))
+      (setq json-data (pm/read-http-data-as-json http-content))
       (with-current-buffer pelpa-buffer
         (setq-default major-mode 'pelpa-mode)  ;; 设置local mojor-mode为'text-mode
         (set-buffer-major-mode pelpa-buffer)
         (erase-buffer)     ;; 先清空原有的内容
-        ;; (insert headers)
-        (insert (format "%s" (pm/read-http-timestamp-string headers)))
+        ;; (insert http-content)
+        (insert (format "%s" (pm/read-http-timestamp-string http-content)))
         ;; 插入json的key value值
         (dolist (item (list 'currentRun 'percent 'percentDesc))
           (insert
