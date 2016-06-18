@@ -48,6 +48,16 @@
     (re-search-forward "^$")
     (json-read)))
 
+(defun pm/read-http-timestamp-string (http-data)
+  (with-temp-buffer
+    (insert http-data)
+    (goto-char (point-min))
+    ))
+
+(defun pm/to-string (origin)
+  (cond ((numberp origin) (number-to-string origin))
+        (t origin)))
+
 (defun pm/ajax-build-status (arg)
   "ajax pelpa building status"
   (interactive "P")
@@ -63,7 +73,7 @@
     (with-current-buffer buffer
       (unless (= 200 (url-http-parse-response))
         (error "Http error %s fetching %s" url-http-response-status pelpa-build-status-url))
-      (message "buffer name%s" (buffer-name))
+      (message "temp buffer name=%s" (buffer-name))
       (setq handle (mm-dissect-buffer t))
       (setq headers (decode-coding-string (buffer-string) 'utf-8))
       (setq json-data (pm/read-http-data-as-json headers))
@@ -72,8 +82,11 @@
         (set-buffer-major-mode pelpa-buffer)
         (erase-buffer)     ;; 先清空原有的内容
         (insert headers)
-        (insert "\n")
-        (insert (pm/render-json-data json-data))
+        (dolist (item (list 'currentRun 'percent 'percentDesc))
+          (insert
+           (format "\n%s:%s"
+                   (symbol-name item)
+                   (pm/to-string (assoc-default item json-data)))))
         ))
     (switch-to-buffer pelpa-buffer-name)))
 
