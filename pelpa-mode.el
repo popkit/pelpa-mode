@@ -48,11 +48,15 @@
     (re-search-forward "^$")
     (json-read)))
 
+;; 解析出http返回的header中的timestamp信息
+;; Date: Sat, 18 Jun 2016 14:43:59 GMT
 (defun pm/read-http-timestamp-string (http-data)
   (with-temp-buffer
     (insert http-data)
     (goto-char (point-min))
-    ))
+    (let* ((start-point (+ 1 (search-forward "Date:")))
+           (end-point (search-forward "\n")))
+      (buffer-substring start-point end-point))))
 
 (defun pm/to-string (origin)
   (cond ((numberp origin) (number-to-string origin))
@@ -66,7 +70,6 @@
          (pelpa-buffer (get-buffer-create pelpa-buffer-name))
          (buffer (url-retrieve-synchronously pelpa-build-status-url))
          (headers nil)
-         (handle nil)
          (json-data nil))
     (if (not buffer)
         (error "请求%s失败，请重试!" pelpa-build-status-url))
@@ -74,20 +77,22 @@
       (unless (= 200 (url-http-parse-response))
         (error "Http error %s fetching %s" url-http-response-status pelpa-build-status-url))
       (message "temp buffer name=%s" (buffer-name))
-      (setq handle (mm-dissect-buffer t))
       (setq headers (decode-coding-string (buffer-string) 'utf-8))
       (setq json-data (pm/read-http-data-as-json headers))
       (with-current-buffer pelpa-buffer
         (setq-default major-mode 'pelpa-mode)  ;; 设置local mojor-mode为'text-mode
         (set-buffer-major-mode pelpa-buffer)
         (erase-buffer)     ;; 先清空原有的内容
-        (insert headers)
+        ;; (insert headers)
+        (insert (format "%s" (pm/read-http-timestamp-string headers)))
+        ;; 插入json的key value值
         (dolist (item (list 'currentRun 'percent 'percentDesc))
           (insert
            (format "\n%s:%s"
                    (symbol-name item)
                    (pm/to-string (assoc-default item json-data)))))
         ))
-    (switch-to-buffer pelpa-buffer-name)))
+    (unless (get-buffer-window)
+      (switch-to-buffer pelpa-buffer-name))))
 
 (provide 'pelpa-mode)
