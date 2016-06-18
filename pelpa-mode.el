@@ -92,7 +92,7 @@
                    (symbol-name item)
                    (pm/to-string (assoc-default item json-data)))))
         ))
-    (unless (get-buffer-window)
+    (unless (get-buffer-window pelpa-buffer-name)
       (switch-to-buffer pelpa-buffer-name))))
 
 (provide 'pelpa-mode)
