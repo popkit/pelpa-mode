@@ -36,6 +36,18 @@
   (interactive "P")
   (decode-coding-region (point-min) (point-max) 'utf-8))
 
+(defun pm/render-json-data (data)
+  (let ((currentRun (assoc-default 'currentRun data)))
+    currentRun))
+
+;; 读取http结果中的json值
+(defun pm/read-http-data-as-json (http-data)
+  (with-temp-buffer
+    (insert http-data)
+    (goto-char (point-min))
+    (re-search-forward "^$")
+    (json-read)))
+
 (defun pm/ajax-build-status (arg)
   "ajax pelpa building status"
   (interactive "P")
@@ -44,20 +56,25 @@
          (pelpa-buffer (get-buffer-create pelpa-buffer-name))
          (buffer (url-retrieve-synchronously pelpa-build-status-url))
          (headers nil)
-         (handle nil))
+         (handle nil)
+         (json-data nil))
     (if (not buffer)
         (error "请求%s失败，请重试!" pelpa-build-status-url))
     (with-current-buffer buffer
-      (unless (= 200 url-http-response-status)
+      (unless (= 200 (url-http-parse-response))
         (error "Http error %s fetching %s" url-http-response-status pelpa-build-status-url))
       (message "buffer name%s" (buffer-name))
       (setq handle (mm-dissect-buffer t))
       (setq headers (decode-coding-string (buffer-string) 'utf-8))
+      (setq json-data (pm/read-http-data-as-json headers))
       (with-current-buffer pelpa-buffer
         (setq-default major-mode 'pelpa-mode)  ;; 设置local mojor-mode为'text-mode
         (set-buffer-major-mode pelpa-buffer)
         (erase-buffer)     ;; 先清空原有的内容
-        (insert headers)))
+        (insert headers)
+        (insert "\n")
+        (insert (pm/render-json-data json-data))
+        ))
     (switch-to-buffer pelpa-buffer-name)))
 
 (provide 'pelpa-mode)
