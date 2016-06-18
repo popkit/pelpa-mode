@@ -18,7 +18,7 @@
 (define-derived-mode pelpa-mode text-mode "pelpa-mode"
   "popkit elpa mode for building status monitor"
   :group 'pelpa-mode
-  )
+ )
 
 (defvar pelpa-mode-map
   (let ((map (make-keymap)))
@@ -93,6 +93,6 @@
                    (pm/to-string (assoc-default item json-data)))))
         ))
     (unless (get-buffer-window pelpa-buffer-name)
-      (switch-to-buffer pelpa-buffer-name))))
+      (switch-to-buffer-other-window pelpa-buffer-name))))
 
 (provide 'pelpa-mode)
