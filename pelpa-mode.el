@@ -15,16 +15,18 @@
 (require 'lisp-mnt)
 (require 'json)
 
-(define-derived-mode pelpa-mode text-mode "pelpa-mode"
-  "popkit elpa mode for building status monitor"
-  :group 'pelpa-mode
- )
-
+;; 注意：这个pelpa-mode-map的定义一定要放在 define-derived-mode 之前
 (defvar pelpa-mode-map
-  (let ((map (make-keymap)))
-    (define-key map "\C-i" 'pm/ajax-build-status)
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map widget-keymap)
+    (define-key map "r" 'pm/ajax-build-status)  ;; refresh status
     map)
   "major key map for pelpa-mode")
+
+(define-derived-mode pelpa-mode nil "pelpa-mode"
+  "Major for popkit elpa site (https://elpa.popkit.org/#/) running monitor."
+  (widen)
+  (setq buffer-read-only t))
 
 (defcustom pm/build-status-url "http://pelpa.popkit.org/elpa/build/ajaxBuildStatus.json"
   "build status url for ajax"
@@ -35,10 +37,6 @@
   "decode current buffer"
   (interactive "P")
   (decode-coding-region (point-min) (point-max) 'utf-8))
-
-(defun pm/render-json-data (data)
-  (let ((currentRun (assoc-default 'currentRun data)))
-    currentRun))
 
 ;; 读取http结果中的json值
 (defun pm/read-http-data-as-json (http-data)
@@ -62,6 +60,13 @@
   (cond ((numberp origin) (number-to-string origin))
         (t origin)))
 
+(defun pm/pelpa-mode-kill ()
+  (interactive)
+  (let ((buffer (current-buffer)))
+    (unless (one-window-p)
+      (delete-window))
+    (kill-buffer buffer)))
+
 (defun pm/ajax-build-status (arg)
   "ajax pelpa building status"
   (interactive "P")
@@ -80,8 +85,8 @@
       (setq http-content (decode-coding-string (buffer-string) 'utf-8))
       (setq json-data (pm/read-http-data-as-json http-content))
       (with-current-buffer pelpa-buffer
-        (setq-default major-mode 'pelpa-mode)  ;; 设置local mojor-mode为'text-mode
-        (set-buffer-major-mode pelpa-buffer)
+        (pelpa-mode)
+        (setq buffer-read-only nil)
         (erase-buffer)     ;; 先清空原有的内容
         ;; (insert http-content)
         (insert (format "%s" (pm/read-http-timestamp-string http-content)))
@@ -91,8 +96,11 @@
            (format "\n%s:%s"
                    (symbol-name item)
                    (pm/to-string (assoc-default item json-data)))))
+        (setq buffer-read-only t)
         ))
     (unless (get-buffer-window pelpa-buffer-name)
-      (switch-to-buffer-other-window pelpa-buffer-name))))
+      (if (one-window-p)    ;; 只有一个window里，在当前window里显示buffer
+          (switch-to-buffer pelpa-buffer-name)
+        (switch-to-buffer-other-window pelpa-buffer-name)))))
 
 (provide 'pelpa-mode)
