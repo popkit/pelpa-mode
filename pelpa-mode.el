@@ -74,8 +74,10 @@
     (insert http-data)
     (goto-char (point-min))
     (let* ((start-point (+ 1 (search-forward "Date:")))
-           (end-point (search-forward "\n")))
-      (buffer-substring start-point end-point))))
+           (end-point (search-forward "\n"))
+           (timestamp-string (buffer-substring start-point end-point)))
+      timestamp-string)
+    ))
 
 (defun pm/to-string (origin)
   (cond ((numberp origin) (number-to-string origin))
