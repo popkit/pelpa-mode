@@ -34,17 +34,23 @@
 (defvar pelpa-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map widget-keymap)
-    (define-key map "r" 'pm/ajax-build-status)  ;; refresh status
+    (define-key map "r" 'pm/monitor)  ;; refresh status
     map)
   "major key map for pelpa-mode")
 
 (define-derived-mode pelpa-mode nil "pelpa-mode"
   "Major for popkit elpa site (https://elpa.popkit.org/#/) running monitor."
   (widen)
-  (setq buffer-read-only t))
+  (setq buffer-read-only t)
+  :group 'pelpa-mode)
 
 (defcustom pm/build-status-url "http://pelpa.popkit.org/elpa/build/ajaxBuildStatus.json"
   "build status url for ajax"
+  :group 'pelpa-mode
+  :type 'string)
+
+(defcustom pm/pelpa-buffer-name "*pelpa*"
+  "the display buffer name"
   :group 'pelpa-mode
   :type 'string)
 
@@ -82,28 +88,20 @@
       (delete-window))
     (kill-buffer buffer)))
 
-(defun pm/ajax-build-status (arg)
-  "ajax pelpa building status"
-  (interactive "P")
-  (let* ((pelpa-build-status-url pm/build-status-url)
-         (pelpa-buffer-name "*pelpa*")
-         (pelpa-buffer (get-buffer-create pelpa-buffer-name))
-         (buffer (url-retrieve-synchronously pelpa-build-status-url))
+;; 获得构建状态信息
+(defun pm/ajax-build-status ()
+  "get build status info"
+  (let* ((buffer (url-retrieve-synchronously pm/build-status-url))
          (http-content nil)
-         (json-data nil))
+         (json-data nil)
+         (result-data nil))
     (if (not buffer)
-        (error "请求%s失败，请重试!" pelpa-build-status-url))
+        (error "请求%服务失败，请重试！" pm/build-status-url))
     (with-current-buffer buffer
-      (unless (= 200 (url-http-parse-response))
-        (error "Http error %s fetching %s" url-http-response-status pelpa-build-status-url))
-      (message "temp buffer name=%s" (buffer-name))
+      (unless (= 200 (url-http-parse-response)))
       (setq http-content (decode-coding-string (buffer-string) 'utf-8))
       (setq json-data (pm/read-http-data-as-json http-content))
-      (with-current-buffer pelpa-buffer
-        (pelpa-mode)
-        (setq buffer-read-only nil)
-        (erase-buffer)     ;; 先清空原有的内容
-        ;; (insert http-content)
+      (with-temp-buffer
         (insert (format "%s" (pm/read-http-timestamp-string http-content)))
         ;; 插入json的key value值
         (dolist (item (list 'currentRun 'percent 'percentDesc))
@@ -111,11 +109,24 @@
            (format "\n%s:%s"
                    (symbol-name item)
                    (pm/to-string (assoc-default item json-data)))))
-        (setq buffer-read-only t)
-        ))
-    (unless (get-buffer-window pelpa-buffer-name)
-      (if (one-window-p)    ;; 只有一个window里，在当前window里显示buffer
-          (switch-to-buffer pelpa-buffer-name)
-        (switch-to-buffer-other-window pelpa-buffer-name)))))
+        (setq result-data (buffer-string))))
+    result-data))
+
+;; 显示所有的监控信息
+(defun pm/monitor (arg)
+  "ajax pelpa building status"
+  (interactive "P")
+  (let* ((pelpa-buffer (get-buffer-create pm/pelpa-buffer-name)))
+    (with-current-buffer pelpa-buffer
+      (pelpa-mode)
+      (setq buffer-read-only nil)
+      (erase-buffer)     ;; 先清空原有的内容
+      (insert (pm/ajax-build-status))
+      (setq buffer-read-only t)
+      ))
+  (unless (get-buffer-window pm/pelpa-buffer-name)
+    (if (one-window-p)    ;; 只有一个window里，在当前window里显示buffer
+        (switch-to-buffer pm/pelpa-buffer-name)
+      (switch-to-buffer-other-window pm/pelpa-buffer-name))))
 
 (provide 'pelpa-mode)
