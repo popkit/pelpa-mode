@@ -83,10 +83,13 @@
 
 (defun pm/pelpa-mode-kill ()
   (interactive)
-  (let ((buffer (current-buffer)))
-    (unless (one-window-p)
-      (delete-window))
-    (kill-buffer buffer)))
+  (with-current-buffer pm/pelpa-buffer-name
+    (let ((buffer (current-buffer)))
+      (unless (one-window-p)
+        (when (get-buffer-window buffer)
+          (delete-window)))
+      (kill-buffer buffer)))
+  (message "%s buffer was killed!" pm/pelpa-buffer-name))
 
 ;; 获得构建状态信息
 (defun pm/ajax-build-status ()
