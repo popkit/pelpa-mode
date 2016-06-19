@@ -29,6 +29,11 @@
 (require 'package)
 (require 'lisp-mnt)
 (require 'json)
+;; 引入widget库
+(require 'widget)
+(require 'cus-edit)
+(eval-when-compile
+  (require 'wid-edit))
 
 ;; 注意：这个pelpa-mode-map的定义一定要放在 define-derived-mode 之前
 (defvar pelpa-mode-map
@@ -134,8 +139,7 @@
 
 (defun pm/go-pelpa-site (button)
   "go elpa site"
-  (browse-url "http://pelpa.popkit.org/elpa/data/index.html")
-  )
+  (browse-url "http://pelpa.popkit.org/elpa/data/index.html"))
 
 ;; 显示所有的监控信息
 (defun pm/monitor (arg)
@@ -158,6 +162,7 @@
       (widget-create 'push-button
                      :format "查看历史访问的统计数据 %[ %t %]\n"
                      :button-face 'custom-button
+                     :help-echo "访问统计链接"
                      :action (lambda (wid &rest ignore)
                                (browse-url "http://pelpa.popkit.org/elpa/data/index.html"))
                      :tag "点击")
