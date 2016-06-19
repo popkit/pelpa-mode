@@ -11,4 +11,5 @@ pelpa-mode是用来监控popkit elpa源的运行情况
 ## 使用
 执行**M-x pm/monitor**然后会显示出一个\*pelpa*的buffer
 
-
+## 快捷键
+. **r**  刷新状态
