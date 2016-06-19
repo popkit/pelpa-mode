@@ -44,6 +44,14 @@
   (setq buffer-read-only t)
   :group 'pelpa-mode)
 
+(defface pm/chart-bar-face
+  '((t . (:background "orange" :foreground "black")))
+  "face for chart bar" :group 'pelpa-mode)
+
+(defface pm/default-button-green
+  '((t . (:background "green" :foreground "black")))
+  "default button" :group 'pelpa-mode)
+
 (defcustom pm/build-status-url "http://pelpa.popkit.org/elpa/build/ajaxBuildStatus.json"
   "build status url for ajax"
   :group 'pelpa-mode
@@ -124,16 +132,28 @@
         (setq result-data (buffer-string))))
     result-data))
 
+(defun pm/go-pelpa-site (button)
+  "go elpa site"
+  (browse-url "http://pelpa.popkit.org/elpa/data/index.html")
+  )
+
 ;; 显示所有的监控信息
 (defun pm/monitor (arg)
   "ajax pelpa building status"
   (interactive "P")
-  (let* ((pelpa-buffer (get-buffer-create pm/pelpa-buffer-name)))
+  (let* ((pelpa-buffer (get-buffer-create pm/pelpa-buffer-name))
+         (ajax-status-content nil))
     (with-current-buffer pelpa-buffer
       (pelpa-mode)
       (setq buffer-read-only nil)
       (erase-buffer)     ;; 先清空原有的内容
-      (insert (pm/ajax-build-status))
+      (setq ajax-status-content (pm/ajax-build-status))
+      (put-text-property 0 9 'font-lock-faces 'pm/chart-bar-face ajax-status-content)
+      (insert ajax-status-content)
+      (insert "\n")
+      (insert-button "查看数据"
+                     'face 'pm/default-button-green
+                     'action 'pm/go-pelpa-site)
       (setq buffer-read-only t)
       ))
   (unless (get-buffer-window pm/pelpa-buffer-name)
