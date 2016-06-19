@@ -67,6 +67,13 @@
     (re-search-forward "^$")
     (json-read)))
 
+;; 将时间转成北京时间
+(defun pm/convert-to-ut+8 (origin)
+  (if (stringp origin)
+      (let* ((time (date-to-time origin)))
+        (format-time-string "%Y-%m-%d %H:%M:%S %a. Week %W" time))
+    origin))
+
 ;; 解析出http返回的header中的timestamp信息
 ;; Date: Sat, 18 Jun 2016 14:43:59 GMT
 (defun pm/read-http-timestamp-string (http-data)
@@ -76,7 +83,7 @@
     (let* ((start-point (+ 1 (search-forward "Date:")))
            (end-point (search-forward "\n"))
            (timestamp-string (buffer-substring start-point end-point)))
-      timestamp-string)
+      (pm/convert-to-ut+8 timestamp-string))
     ))
 
 (defun pm/to-string (origin)
