@@ -154,6 +154,13 @@
       (insert-button "查看数据"
                      ;;'face 'pm/default-button-green
                      'action 'pm/go-pelpa-site)
+      (insert "\n")
+      (widget-create 'push-button
+                     :format "查看历史访问的统计数据 %[ %t %]\n"
+                     :button-face 'custom-button
+                     :action (lambda (wid &rest ignore)
+                               (browse-url "http://pelpa.popkit.org/elpa/data/index.html"))
+                     :tag "点击")
       (setq buffer-read-only t)
       ))
   (unless (get-buffer-window pm/pelpa-buffer-name)
