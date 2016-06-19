@@ -152,7 +152,7 @@
       (insert ajax-status-content)
       (insert "\n")
       (insert-button "查看数据"
-                     'face 'pm/default-button-green
+                     ;;'face 'pm/default-button-green
                      'action 'pm/go-pelpa-site)
       (setq buffer-read-only t)
       ))
