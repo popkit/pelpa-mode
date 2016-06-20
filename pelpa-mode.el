@@ -137,9 +137,9 @@
         (setq result-data (buffer-string))))
     result-data))
 
-(defun pm/go-pelpa-site (button)
+(defun pm/go-github-pelpa-repo (button)
   "go elpa site"
-  (browse-url "http://pelpa.popkit.org/elpa/data/index.html"))
+  (browse-url "https://github.com/popkit/pelpa"))
 
 ;; 显示所有的监控信息
 (defun pm/monitor (arg)
@@ -155,9 +155,9 @@
       (put-text-property 0 9 'font-lock-faces 'pm/chart-bar-face ajax-status-content)
       (insert ajax-status-content)
       (insert "\n")
-      (insert-button "查看数据"
+      (insert-button "pelpa@github"
                      ;;'face 'pm/default-button-green
-                     'action 'pm/go-pelpa-site)
+                     'action 'pm/go-github-pelpa-repo)
       (insert "\n")
       (widget-create 'push-button
                      :format "查看历史访问的统计数据 %[ %t %]\n"
